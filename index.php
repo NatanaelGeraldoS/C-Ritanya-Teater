@@ -10,10 +10,6 @@
             }
         }
     }
-    else{
-        header('Location: login.php');
-        exit;
-    }
     
 
 ?>
@@ -65,11 +61,26 @@
                         <a class="nav-link disabled">Disabled</a>
                     </li> -->
                 </ul>
-                <form class="d-flex">
-
-                    <a href="logout.php" class="btn btn-outline-light" style="margin-right: 20px;">Log
-                        Out</a>
-                    <a href="register.html" class="btn btn-outline-light" type="submit">Need Help?</a>
+                <form class="d-flex navbar-nav">
+                    <?php
+                    if(isset($_COOKIE["UserID"])) {
+                        echo "<li class='nav-item dropdown'>
+                        <a class='nav-link dropdown-toggle' href='#' id='navbarDropdown' role='button'
+                            data-bs-toggle='dropdown' aria-expanded='false'>
+                            ".$Username."
+                        </a>
+                        <ul class='dropdown-menu dropdown-menu-lg-end' aria-labelledby='navbarDropdown'>
+                            <li><a class='dropdown-item' href='#'>Profile</a></li>
+                            <li><a class='dropdown-item' href='logout.php'>LogOut</a></li>
+                        </ul>
+                    </li>";
+                    }
+                    else{
+                        echo "<a href='login.php' class='btn btn-outline-light' style='margin-right:20px'>Login</a>
+                        <a href='register.php' class='btn btn-outline-light' style='margin-right:20px'>Register</a>
+                        <a href='HELP.php' class='btn btn-outline-light'>Need Help?</a>";
+                    }
+                    ?>
                 </form>
             </div>
         </div>

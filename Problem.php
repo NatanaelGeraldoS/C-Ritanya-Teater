@@ -14,27 +14,40 @@
         header('Location: login.php');
         exit;
     }
-    
+    if($RoleName!="Manager" && $RoleName!="Staff"){
+        header('Location: index.php');
+        exit;  
+    }
+    if(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on')   
+         $url = "https://";   
+    else  
+         $url = "http://";   
+    $url.= $_SERVER['HTTP_HOST'];   
+    $url.= $_SERVER['REQUEST_URI'];  
+    $url_components = parse_url($url);
+    if(isset($url_components['query'])){
+        parse_str($url_components['query'], $params);
+    }
+    $key = '?Room';
+    $filteredURL = preg_replace('~(\?|&)'.$key.'=[^&]*~', '$1', $url);
+    $filteredURL = str_replace("?", '', $filteredURL);
 
 ?>
-<!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
-    <link rel="shortcut icon" href="Assets/Logo.png" type="image/x-icon">
+    <title>Problem Room</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/">C'Ritanya Teater</a>
+            <a class="navbar-brand" href="#">C'Ritanya Teater</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                 data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
                 aria-label="Toggle navigation">
@@ -75,41 +88,68 @@
             </div>
         </div>
     </nav>
-    <div class="main" style="width:100%; overflow-x: hidden;">
-        <div class="header mb-5">
-            <img src=" Assets/HeaderUser.png" alt="Header" height="200px" width="100%">
-            <div class="ImageandName d-flex">
-                <img src="Assets/Logo.png" alt="" class="Profile">
-                <h3 class="name">C’Ritanya Teater<br>
-                    Welcome Back, <?php echo $Username;?>, <br>Your Role Is
-                    <?php echo $RoleName;?></h3>
+    <div class="container">
+        <div class="row">
+            <div class="col-6">
+                <?php
+                    $sql1 = "SELECT * FROM room" ;
+                    $result = $conn->query($sql1);
+                    if($result->num_rows>0){
+                        while($row = $result->fetch_assoc()){
+                            $link = $filteredURL;
+                            $link.="?Room=".$row["RoomID"];
+                            echo "
+                            <a href='".$link."'  class='card mt-3'>
+                                <div class='card-body'>
+                                Room ".$row["RoomNumber"]."
+                                </div>
+                            </a>";
+                        }
+                    }
+                ?>
             </div>
-
-
+            <div class="col-6">
+                <?php
+                    if(isset($params["Room"])){
+                        if($RoleName == "Manager" ){
+                            echo '<form method="POST" action="addproblem.php" enctype="multipart/form-data" class="mx-auto row mt-3">
+                        <input type="text" class="form-control d-none" name="roomid" id="roomid" value='.$params["Room"].'>
+                        <input type="text" class="form-control w-75" placeholder="New Problem"
+                            aria-label="New Problem" aria-describedby="button-addon2" name="addproblem" id="addproblem">
+                        <button class="btn btn-outline-secondary w-25" type="submit" id="button-addon2">Add
+                            New</button>
+                    </form>';
+                        }
+                        
+                
+                            
+                            $sql = "SELECT * FROM `roomproblem` WHERE `RoomId` = ".$params["Room"];
+                            $result = $conn->query($sql);
+                            if($result->num_rows>0){
+                                echo '<div class="card mt-3">
+                                <div class="card-body">
+                                    <div class="input-group mb-3">
+                                    </div>';
+                                while($row = $result->fetch_assoc()){
+                                    echo '<div class="input-group my-3">
+                                    <div class="form-control">'.$row["ProblemDescription"].'</div>';
+                                    if($RoleName == "Manager"){
+                                        echo '<form method="POST" action="DeleteProblem.php" enctype="multipart/form-data" class="mx-auto row mt-3">
+                                        <input type="text" class="form-control d-none" name="ProblemID" id="ProblemID" value='.$row["ProblemID"].'>
+                                        <button class="input-group-text" type="submit">Delete</button>
+                                    </form>
+                                  ';
+                                    }
+                                    echo '</div>';
+                                    
+                                }
+                            }
+                        }
+                ?>
+            </div>
         </div>
-        <div class="container">
-            <?php
-                if($RoleName == "User"){
-                    echo "<div class='row'>
-                        <div class='col-lg-12 col-sm-6'>Make Our Safe  & Clean Theatre All Yours
-                        <a href='booking.php' class='btn btn-outline-danger btn-lg w-50'>Book Now</a></div>
-                        <div class='col-lg-12 col-sm-6'>Host a Private Theater Rental at C'Ritanya Theatre! 
-                        It's perfect for an everyday getaway or a special occasion.
-
-                        Certain theaters now offer Private Theater Rentals for larger groups. 
-                        Just select showtimes for a group size that fits your number of guests.
-
-                        Question? The answer may be in our FAQ.</div>
-                    </div>";
-                }
-                if($RoleName == "Manager"){
-                    echo "<a href='absent.php' class='btn btn-outline-dark btn-lg w-50'>Staff Absent</a>";
-                }
-                if($RoleName == "Manager" || $RoleName == "Staff"){
-                    echo "<a href='Problem.php' class='btn btn-outline-dark btn-lg w-50'>Room Notes</a>";
-                }
-            ?>
-        </div>
+    </div>
+    </div>
 
     </div>
     <div class=" mt-5">
@@ -138,6 +178,7 @@
         </footer>
 
     </div>
+
 </body>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous">
